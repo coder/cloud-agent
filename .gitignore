@@ -5,3 +5,4 @@ node_modules
 .dbtemp
 .vscode
 vendor
+cloud-agent
