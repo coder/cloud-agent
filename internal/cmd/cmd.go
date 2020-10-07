@@ -27,8 +27,7 @@ func (c *rootCmd) Spec() cli.CommandSpec {
 
 func (c *rootCmd) Subcommands() []cli.Command {
 	return []cli.Command{
-		&linkCmd{},
-		&proxyCmd{},
+		&bindCmd{},
 		&versionCmd{},
 	}
 }
