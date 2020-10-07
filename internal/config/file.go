@@ -5,10 +5,6 @@ import "golang.org/x/xerrors"
 var (
 	// SessionToken is the file containing the session token.
 	SessionToken File = "session"
-	// ServerID is the file containing the server ID.
-	ServerID File = "server"
-	// URL is the file containing the url to a Coder-Cloud instance.
-	URL File = "url"
 )
 
 // File is a thin wrapper around os.File for conveniently interacting

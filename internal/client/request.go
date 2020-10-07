@@ -16,12 +16,12 @@ func (c *Client) request(method, path string, body interface{}) (*http.Response,
 		return nil, xerrors.Errorf("marshal body: %w", err)
 	}
 
-	req, err := http.NewRequest(method, c.baseURL.String()+path, bytes.NewReader(b))
+	req, err := http.NewRequest(method, c.BaseURL.String()+path, bytes.NewReader(b))
 	if err != nil {
 		return nil, xerrors.Errorf("new request: %w", err)
 	}
 
-	req.Header.Set(sessionHeader, c.token)
+	req.Header.Set(sessionHeader, c.Token)
 
 	return http.DefaultClient.Do(req)
 }
