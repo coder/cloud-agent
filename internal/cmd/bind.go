@@ -102,7 +102,7 @@ func (c *bindCmd) Run(fl *pflag.FlagSet) {
 		CodeServerID:   cs.ID,
 		SessionToken:   token,
 		CloudProxyURL:  c.cloudURL,
-		CodeServerAddr: os.Getenv(c.codeServerAddr),
+		CodeServerAddr: c.codeServerAddr,
 	}
 
 	proxy := func() {
