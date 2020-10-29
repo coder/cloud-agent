@@ -11,7 +11,7 @@ import (
 	"net/url"
 
 	"cdr.dev/slog"
-	"golang.org/x/sync/semaphore"
+	"github.com/hashicorp/yamux"
 	"golang.org/x/xerrors"
 	"nhooyr.io/websocket"
 )
@@ -28,8 +28,6 @@ type Agent struct {
 	CloudProxyURL      string
 }
 
-const connBuffer = 3
-
 // Proxy proxies a Coder Cloud connection to a local code server instance.
 func (a *Agent) Proxy(ctx context.Context) error {
 	l, err := net.Listen("tcp", ":0")
@@ -44,69 +42,43 @@ func (a *Agent) Proxy(ctx context.Context) error {
 		a.Log.Warn(ctx, "code-server proxy exited", slog.Error(err))
 	}()
 
-	// The semaphore is to ensure we are maintaining enough open connections
-	// in the server. The intent is not to limit the number of concurrent
-	// connections, but the number of free connections for Coder Cloud to proxy
-	// requests on.
-	sem := semaphore.NewWeighted(connBuffer)
-	for {
-		err := sem.Acquire(ctx, 1)
-		if err != nil {
-			return err
-		}
-		go func() {
-			defer sem.Release(1)
-
-			ws, err := dialProxy(ctx, a.CloudProxyURL, a.CodeServerID, a.SessionToken)
-			if err != nil && !xerrors.Is(err, io.EOF) {
-				a.Log.Error(ctx, "dial proxy", slog.Error(err))
-				return
-			}
-
-			conn := websocket.NetConn(ctx, ws, websocket.MessageBinary)
-
-			err = proxyCodeServer(ctx, a.Log, conn, l.Addr().String())
-			if err != nil && !xerrors.Is(err, io.EOF) {
-				a.Log.Error(ctx, "proxy code-server", slog.Error(err))
-			}
-		}()
+	ws, err := dialProxy(ctx, a.CloudProxyURL, a.CodeServerID, a.SessionToken)
+	if err != nil && !xerrors.Is(err, io.EOF) {
+		return xerrors.Errorf("dial proxy: %w", err)
 	}
+
+	conn := websocket.NetConn(ctx, ws, websocket.MessageBinary)
+
+	err = proxyCodeServer(ctx, a.Log, conn, l.Addr().String())
+	if err != nil && !xerrors.Is(err, io.EOF) {
+		return xerrors.Errorf("proxy code-server: %w", err)
+	}
+	return nil
 }
 
 // proxyCodeServer proxies a Coder Cloud connection to the local code-server.
 func proxyCodeServer(ctx context.Context, log slog.Logger, proxyConn net.Conn, addr string) error {
-	buf := make([]byte, 4096)
-	// We explicitly read here, this lets us block until we get a request
-	// from the proxy.
-	n, err := proxyConn.Read(buf)
+	stream, err := yamux.Server(proxyConn, nil)
 	if err != nil {
-		_ = proxyConn.Close()
-		return xerrors.Errorf("read from proxy: %w", err)
+		return xerrors.Errorf("multiplex stream: %w", err)
 	}
 
-	// The rest of the proxying we do asynchronously. We want to always ensure
-	// there are open connections for the proxy to use. If we waited until
-	// each request completed we would only be able to process as many requests
-	// as the size of the semaphore.
-	go func() {
-		defer proxyConn.Close()
-		csConn, err := net.Dial("tcp", addr)
+	for {
+		conn, err := stream.Accept()
 		if err != nil {
-			log.Error(ctx, "dial code-server", slog.Error(err))
-			return
+			return xerrors.Errorf("accept stream: %w", err)
 		}
 
-		_, err = csConn.Write(buf[:n])
-		if err != nil {
-			log.Error(ctx, "write code-server", slog.Error(err))
-			return
-		}
-
-		// bicopy closes the streams.
-		bicopy(ctx, csConn, proxyConn)
-	}()
-
-	return nil
+		go func() {
+			csConn, err := net.Dial("tcp", addr)
+			if err != nil {
+				log.Error(ctx, "dial code-server", slog.Error(err))
+				return
+			}
+			// Bicopy closes the streams.
+			bicopy(ctx, csConn, conn)
+		}()
+	}
 }
 
 func codeServerReverseProxy(addr, password string) http.Handler {
