@@ -44,7 +44,7 @@ func Login(addr, serverName string) (string, error) {
 			"User-Agent": []string{userAgent()},
 		},
 	})
-	if resp.StatusCode != http.StatusSwitchingProtocols {
+	if resp != nil && resp.StatusCode != http.StatusSwitchingProtocols {
 		return "", bodyError(resp)
 	}
 	if err != nil {

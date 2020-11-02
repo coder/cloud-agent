@@ -12,6 +12,7 @@ import (
 
 	"cdr.dev/slog"
 	"github.com/hashicorp/yamux"
+	"go.coder.com/cloud-agent/internal/client"
 	"golang.org/x/xerrors"
 	"nhooyr.io/websocket"
 )
@@ -36,15 +37,25 @@ func (a *Agent) Proxy(ctx context.Context) error {
 	}
 	defer l.Close()
 
+	baseURL, err := url.Parse(a.CloudProxyURL)
+	if err != nil {
+		return xerrors.Errorf("invalid cloud URL: %w", err)
+	}
+
 	go func() {
 		err := http.Serve(l,
 			codeServerReverseProxy(a.CodeServerAddr, a.CodeServerPassword))
 		a.Log.Warn(ctx, "code-server proxy exited", slog.Error(err))
 	}()
 
-	ws, err := dialProxy(ctx, a.CloudProxyURL, a.CodeServerID, a.SessionToken)
-	if err != nil && !xerrors.Is(err, io.EOF) {
-		return xerrors.Errorf("dial proxy: %w", err)
+	client := &client.Client{
+		BaseURL: baseURL,
+		Token:   a.SessionToken,
+	}
+
+	ws, err := client.ProxyAgent(ctx, a.CodeServerID)
+	if err != nil {
+		return xerrors.Errorf("proxy agent: %w", err)
 	}
 
 	conn := websocket.NetConn(ctx, ws, websocket.MessageBinary)
@@ -99,28 +110,6 @@ func codeServerReverseProxy(addr, password string) http.Handler {
 	}
 
 	return rp
-}
-
-// dialProxy dials the Coder Cloud proxy.
-func dialProxy(ctx context.Context, addr, serverID, token string) (*websocket.Conn, error) {
-	u, err := url.Parse(addr)
-	if err != nil {
-		return nil, xerrors.Errorf("parse coder cloud url: %w", err)
-	}
-	ws, _, err := websocket.Dial(ctx, //nolint:bodyclose
-		fmt.Sprintf("%v://%v/proxy/ide/%v/server",
-			u.Scheme,
-			u.Host,
-			serverID),
-		&websocket.DialOptions{
-			HTTPHeader: http.Header{
-				sessionHeader: []string{token},
-			},
-		})
-	if err != nil {
-		return nil, xerrors.Errorf("dial cproxy: %w", err)
-	}
-	return ws, nil
 }
 
 // bicopy copies all of the data between the two connections
