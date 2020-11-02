@@ -6,9 +6,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"go.coder.com/cli"
+	"go.coder.com/cloud-agent/internal/version"
 )
-
-var Version string
 
 type versionCmd struct{}
 
@@ -21,5 +20,5 @@ func (c *versionCmd) Spec() cli.CommandSpec {
 }
 
 func (c *versionCmd) Run(fl *pflag.FlagSet) {
-	fmt.Println(Version)
+	fmt.Println(version.Version)
 }

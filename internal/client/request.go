@@ -5,10 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"go.coder.com/cloud-agent/internal/version"
 	"golang.org/x/xerrors"
 )
 
-const sessionHeader = "Session-Token"
+const (
+	sessionHeader      = "Session-Token"
+	agentVersionHeader = "X-Coder-Agent-Version"
+)
 
 func (c *Client) request(method, path string, body interface{}) (*http.Response, error) {
 	b, err := json.Marshal(body)
@@ -22,6 +26,7 @@ func (c *Client) request(method, path string, body interface{}) (*http.Response,
 	}
 
 	req.Header.Set(sessionHeader, c.Token)
+	req.Header.Set(agentVersionHeader, version.Version)
 
 	return http.DefaultClient.Do(req)
 }
