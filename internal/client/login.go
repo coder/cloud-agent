@@ -3,12 +3,14 @@ package client
 import (
 	"context"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 
 	"github.com/pkg/browser"
 	"golang.org/x/xerrors"
 	"nhooyr.io/websocket"
 
+	"go.coder.com/cloud-agent/internal/version"
 	"go.coder.com/cloud-agent/pkg/agentlogin"
 	"go.coder.com/flog"
 )
@@ -38,7 +40,14 @@ func Login(addr, serverName string) (string, error) {
 		RawQuery: query.Encode(),
 	}
 
-	conn, _, err := websocket.Dial(ctx, loginURL.String(), nil)
+	conn, resp, err := websocket.Dial(ctx, loginURL.String(), &websocket.DialOptions{
+		HTTPHeader: http.Header{
+			agentVersionHeader: []string{version.Version},
+		},
+	})
+	if resp.StatusCode != http.StatusSwitchingProtocols {
+		return "", bodyError(resp)
+	}
 	if err != nil {
 		return "", err
 	}
