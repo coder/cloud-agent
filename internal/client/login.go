@@ -10,7 +10,6 @@ import (
 	"golang.org/x/xerrors"
 	"nhooyr.io/websocket"
 
-	"go.coder.com/cloud-agent/internal/version"
 	"go.coder.com/cloud-agent/pkg/agentlogin"
 	"go.coder.com/flog"
 )
@@ -42,7 +41,7 @@ func Login(addr, serverName string) (string, error) {
 
 	conn, resp, err := websocket.Dial(ctx, loginURL.String(), &websocket.DialOptions{
 		HTTPHeader: http.Header{
-			agentVersionHeader: []string{version.Version},
+			"User-Agent": []string{userAgent()},
 		},
 	})
 	if resp.StatusCode != http.StatusSwitchingProtocols {
