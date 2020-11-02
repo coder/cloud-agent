@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	sessionHeader      = "Session-Token"
-	agentVersionHeader = "X-Coder-Agent-Version"
+	sessionHeader = "Session-Token"
 )
 
 func (c *Client) request(method, path string, body interface{}) (*http.Response, error) {
@@ -26,7 +25,7 @@ func (c *Client) request(method, path string, body interface{}) (*http.Response,
 	}
 
 	req.Header.Set(sessionHeader, c.Token)
-	req.Header.Set(agentVersionHeader, version.Version)
+	req.Header.Set("User-Agent", userAgent())
 
 	return http.DefaultClient.Do(req)
 }
@@ -64,4 +63,8 @@ func bodyError(resp *http.Response) error {
 	}
 
 	return xerrors.New(apiErr.Err.Msg)
+}
+
+func userAgent() string {
+	return "CoderCloud/" + version.Version
 }
