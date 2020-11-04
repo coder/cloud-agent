@@ -71,19 +71,9 @@ func (c *bindCmd) Run(fl *pflag.FlagSet) {
 		flog.Fatal("Invalid Cloud URL: %v", err.Error())
 	}
 
-	latency, tolerable, err := client.Ping(c.cloudURL)
-	if err != nil {
-		flog.Fatal("ping server: %s", err.Error())
-	}
-
-	if !tolerable {
-		flog.Fatal("Unfortunately we cannot ensure a good user experience with your connection latency (%s). Efforts are underway to accommodate users in most areas.", latency)
-	}
-
-	flog.Info("Detected an acceptable latency of %s", latency)
-
 	token, err := config.SessionToken.Read()
 	if xerrors.Is(err, os.ErrNotExist) {
+		checkLatency(c.cloudURL)
 		token, err = login(cloudURL.String(), name)
 	}
 	if err != nil {
@@ -160,4 +150,17 @@ func genServerName() (string, error) {
 	hostname = strings.Split(hostname, ".")[0]
 	// '-' are not allowed, convert them to '_'.
 	return strings.Replace(hostname, "-", "_", -1), nil
+}
+
+func checkLatency(cloudURL string) {
+	latency, tolerable, err := client.Ping(cloudURL)
+	if err != nil {
+		flog.Fatal("ping server: %s", err.Error())
+	}
+
+	if !tolerable {
+		flog.Fatal("Unfortunately we cannot ensure a good user experience with your connection latency (%s). Efforts are underway to accommodate users in most areas.", latency)
+	}
+
+	flog.Info("Detected an acceptable latency of %s", latency)
 }
