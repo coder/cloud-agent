@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"go.coder.com/cloud-agent/internal/version"
@@ -14,12 +15,16 @@ const (
 )
 
 func (c *Client) request(method, path string, body interface{}) (*http.Response, error) {
-	b, err := json.Marshal(body)
-	if err != nil {
-		return nil, xerrors.Errorf("marshal body: %w", err)
+	var rd io.Reader
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			return nil, xerrors.Errorf("marshal body: %w", err)
+		}
+		rd = bytes.NewReader(b)
 	}
 
-	req, err := http.NewRequest(method, c.BaseURL.String()+path, bytes.NewReader(b))
+	req, err := http.NewRequest(method, c.BaseURL.String()+path, rd)
 	if err != nil {
 		return nil, xerrors.Errorf("new request: %w", err)
 	}
