@@ -23,7 +23,7 @@ var (
 	DefaultCloudURL = "https://cloud.coder.com"
 )
 
-var codeServerNameRx = regexp.MustCompile("^[a-z][a-z0-9_]{0,50}$")
+var codeServerNameRx = regexp.MustCompile("^[a-z0-9][a-z0-9_]{0,50}$")
 
 type bindCmd struct {
 	cloudURL       string
