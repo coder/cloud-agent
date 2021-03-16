@@ -34,7 +34,7 @@ func (c *bindCmd) Spec() cli.CommandSpec {
 	return cli.CommandSpec{
 		Name:  "bind",
 		Usage: "[NAME]",
-		Desc:  "Bind a server to Coder Cloud. A name will be generated from the hostname if one is not provided.",
+		Desc:  "Bind a server to --link. A name will be generated from the hostname if one is not provided.",
 	}
 }
 
@@ -109,11 +109,11 @@ func (c *bindCmd) Run(fl *pflag.FlagSet) {
 	proxy := func() {
 		err = agent.Proxy(ctx)
 		if err != nil {
-			flog.Error("Connection to Coder-Cloud disrupted, re-establishing connection: %v", err.Error())
+			flog.Error("Connection disrupted, re-establishing connection: %v", err.Error())
 		}
 	}
 
-	flog.Info("Proxying code-server to Coder Cloud, you can access your IDE at %v", url)
+	flog.Info("Proxying code-server, you can access your IDE at %v", url)
 
 	proxy()
 
