@@ -1,0 +1,32 @@
+on: 
+  release:
+    types:
+      - created
+
+name: Build Release
+jobs:
+  release:
+    name: Build release packages
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.15'
+
+    - run: go build -v -o cloud-agent-$GOOS-$GOARCH
+
+    - run: gh release upload $(echo $GITHUB_REF | cut -d/ -f3) ./cloud-agent-$GOOS-$GOARCH
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
