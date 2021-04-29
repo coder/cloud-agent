@@ -5,66 +5,28 @@ on:
 
 name: Build Release
 jobs:
-  release-linux-amd64:
-    name: x86_64 Linux release
+  release:
+    name: Build release packages
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.15' # The Go version to download (if necessary) and use.    - name: compile and release
-    - run: go build -v -o cloud-agent-linux-amd64
-      env:
-        GOARCH: amd64
-        GOOS: linux
-    - run: hub release edit -m "" -a ./cloud-agent-linux-amd64 $(echo $GITHUB_REF | cut -d/ -f3)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release-linux-arm64:
-    name: ARM64 Linux release
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.15' # The Go version to download (if necessary) and use.    - name: compile and release
-    - run: go build -v -o cloud-agent-linux-arm64
-      env:
-        GOARCH: arm64
-        GOOS: linux
-    - run: hub release edit -m "" -a ./cloud-agent-linux-arm64 $(echo $GITHUB_REF | cut -d/ -f3)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
 
-  release-macos-amd64:
-    name: x86_64 macOS release
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
-      with:
-        go-version: '^1.15' # The Go version to download (if necessary) and use.    - name: compile and release
-    - run: go build -v -o cloud-agent-macos-amd64
-      env:
-        GOARCH: amd64
-        GOOS: darwin
-    - run: hub release edit -m "" -a ./cloud-agent-macos-amd64 $(echo $GITHUB_REF | cut -d/ -f3)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
 
-  release-macos-arm64:
-    name: ARM64 macOS release
-    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - uses: actions/setup-go@v2
       with:
-        go-version: '^1.15' # The Go version to download (if necessary) and use.    - name: compile and release
-    - run: go build -v -o cloud-agent-macos-arm64
-      env:
-        GOARCH: arm64
-        GOOS: darwin
-    - run: hub release edit -m "" -a ./cloud-agent-macos-arm64 $(echo $GITHUB_REF | cut -d/ -f3)
+        go-version: '^1.15'
+
+    - run: go build -v -o cloud-agent-$GOOS-$GOARCH
+
+    - run: gh release upload $(echo $GITHUB_REF | cut -d/ -f3) ./cloud-agent-$GOOS-$GOARCH
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
