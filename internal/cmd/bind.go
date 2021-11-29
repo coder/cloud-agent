@@ -114,7 +114,7 @@ func (c *bindCmd) Run(fl *pflag.FlagSet) {
 	}
 
 	flog.Info("code-server --link is deprecated. While the servers will remain online,")
-	flog.Info("we are unable to troubleshoot --link issues. A future code-server")
+	flog.Info("we are not releasing new features or bugfixes. A future code-server")
 	flog.Info("release will include a v2 with new features. If you would")
 	flog.Info("like early access, reach out on https://cdr.co/join-community")
 	flog.Info("")
