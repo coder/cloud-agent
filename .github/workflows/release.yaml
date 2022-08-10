@@ -26,7 +26,7 @@ jobs:
 
     - uses: actions/setup-go@v2
       with:
-        go-version: '^1.15'
+        go-version: '^1.19'
 
     - run: go build -v -o cloud-agent-$GOOS-$GOARCH -ldflags "-X go.coder.com/cloud-agent/internal/version.Version=$(echo $GITHUB_REF | cut -d/ -f3)"
 
