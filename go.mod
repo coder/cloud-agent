@@ -1,6 +1,6 @@
 module go.coder.com/cloud-agent
 
-go 1.19
+go 1.25.0
 
 require (
 	cdr.dev/slog v1.3.0
@@ -23,6 +23,7 @@ require (
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	go.opencensus.io v0.22.2 // indirect
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
-	golang.org/x/sys v0.0.0-20220808155132-1c4a2a72c664 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
 )
