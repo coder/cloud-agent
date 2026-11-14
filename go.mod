@@ -1,6 +1,6 @@
 module go.coder.com/cloud-agent
 
-go 1.19
+go 1.24
 
 require (
 	cdr.dev/slog v1.3.0
@@ -19,7 +19,7 @@ require (
 	github.com/dlclark/regexp2 v1.2.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
-	github.com/klauspost/compress v1.10.3 // indirect
+	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	go.opencensus.io v0.22.2 // indirect
